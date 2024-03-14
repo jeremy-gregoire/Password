@@ -1,4 +1,4 @@
-import hashlib, random, string
+import hashlib, random, string, re
 from tkinter import *
 from json_utility import JSONUtility
 
@@ -7,7 +7,6 @@ class App(Tk):
     super().__init__(screenName, baseName, className, useTk, sync, use)
 
     self.data = JSONUtility.from_json("data.json")
-
     self.is_pw_auto_generate = False
     self.visibility = False
     self.pi_visibility_on = PhotoImage(file=f"images/png/visibility_on.png")
@@ -17,15 +16,15 @@ class App(Tk):
     self.title("Mot de passe")
     self.resizable(False, False)
 
-    self_paned = PanedWindow(self, orient="vertical")
-    self_paned.pack(side="top", pady=75, padx=75, fill="both")
+    self.self_paned = PanedWindow(self, orient="vertical")
+    self.self_paned.pack(side="top", pady=75, padx=75, fill="both")
 
     # Login section
     lbl_login = Label(master=self, text="Nom d'utilisateur")
-    self_paned.add(lbl_login)
+    self.self_paned.add(lbl_login)
 
     entry_login = Entry(master=self)
-    self_paned.add(entry_login)
+    self.self_paned.add(entry_login)
 
     # Password section
     password_section = Frame(self)
@@ -34,12 +33,10 @@ class App(Tk):
     password_section.rowconfigure(0, weight=1)
 
     lbl_password = Label(master=self, text="Mot de passe")
-    self_paned.add(lbl_password)
+    self.self_paned.add(lbl_password)
 
     entry_password_value = StringVar()
-    def hello(var, index, mode):
-      print(entry_password_value.get())
-    entry_password_value.trace_add("write", callback=hello)
+    entry_password_value.trace_add("write", callback=self.on_entry_pw_changed)
     entry_password = Entry(master=password_section, textvariable=entry_password_value, show="*")
     entry_password.grid(row=0, column=0, sticky="WE", padx=(0, 5))
 
@@ -49,31 +46,34 @@ class App(Tk):
     btn_clear_password = Button(master=password_section, text="X", command=lambda: entry_password_value.set(""))
     btn_clear_password.grid(row=0, column=2, sticky="WE")
 
-    self_paned.add(password_section)
+    self.self_paned.add(password_section)
 
     # Generate Random Password button
     lbl_nb_character_random = Label(master=self, text="Nombre de caractère")
-    self_paned.add(lbl_nb_character_random)
+    self.self_paned.add(lbl_nb_character_random)
 
     sb_nb_random_character = Spinbox(master=self, from_=8, to=255)
-    self_paned.add(sb_nb_random_character)
+    self.self_paned.add(sb_nb_random_character)
     
     btn_random_generate_password = Button(master=self, text="Générer un mot de passe aléatoire", command=lambda: self.on_generate_rand_pw_btn_clicked(sb_nb_random_character.get(), entry_password_value))
-    self_paned.add(btn_random_generate_password)
+    self.self_paned.add(btn_random_generate_password)
 
     # Register account button
-    btn_register = Button(master=self, text="Enregistrer un compte", command=lambda: self.save_user(self.data, entry_login.get(), entry_password.get()))
-    self_paned.add(btn_register)
+    btn_register = Button(master=self, text="Enregistrer un compte", command=lambda: self.on_register_btn_clicked(entry_login.get(), entry_password.get()))
+    self.self_paned.add(btn_register)
 
     # Reset password button
-    btn_reset = Button(master=self, text="Mot de passe oublié", command=lambda: self.show_app_reset_password(self.data))
-    self_paned.add(btn_reset)
+    btn_reset = Button(master=self, text="Mot de passe oublié", command=self.show_app_reset_password)
+    self.self_paned.add(btn_reset)
 
     # Connexion button
     btn_connexion = Button(master=self, text="Se connecter", state="disabled")
-    self_paned.add(btn_connexion)
+    self.self_paned.add(btn_connexion)
 
-    self_paned.pack()
+    # Error message
+    self.lbl_error_message = Label(master=self, text="", justify="left", foreground="red")
+
+    self.self_paned.pack()
     self.mainloop()
   
   def show_app_connexion(self, user: dict) -> None:
@@ -86,9 +86,14 @@ class App(Tk):
     lbl_welcome = Label(master=sub_window, text=f"Bienvenue {login}! Tu a été connecter avec succès !")
     lbl_welcome.pack()
 
-  def show_app_reset_password(self, data: list = None) -> None:
+  def show_app_reset_password(self) -> None:
     sub_window = Toplevel()
-    sub_window.title("Réinitialisé le mot de passe")
+    sub_window.title("Réinitialisé le mot de passe")    # if self.is_pw_auto_generate:
+    #   self.save_user(self.data, login, password)
+    # elif len(password) >= 8 and bool(re.search(r"[a-zA-Z0-9]", password)):
+    #   self.save_user(self.data, login, password)
+    # else:
+    #   pass
     sub_window.resizable(False, False)
 
     sub_paned_window = PanedWindow(master=sub_window, orient="vertical")
@@ -96,8 +101,12 @@ class App(Tk):
 
     # Login section
     lbl_login = Label(master=sub_paned_window, text="Nom d'utilisateur")
-    sub_paned_window.add(lbl_login)
-
+    sub_paned_window.add(lbl_login)    # if self.is_pw_auto_generate:
+    #   self.save_user(self.data, login, password)
+    # elif len(password) >= 8 and bool(re.search(r"[a-zA-Z0-9]", password)):
+    #   self.save_user(self.data, login, password)
+    # else:
+    #   pass
     entry_login = Entry(master=sub_paned_window)
     sub_paned_window.add(entry_login)
 
@@ -109,7 +118,7 @@ class App(Tk):
     sub_paned_window.add(entry_new_password)
 
     # Modify password section
-    btn_modify = Button(master=sub_paned_window, text="Changer le mot de passe", command=lambda: self.modify_password_user(data, entry_login.get(), entry_new_password.get()))
+    btn_modify = Button(master=sub_paned_window, text="Changer le mot de passe", command=lambda: self.modify_password_user(self.data, entry_login.get(), entry_new_password.get()))
     sub_paned_window.add(btn_modify)
 
   def hash_password(self, password: str) -> str:
@@ -127,7 +136,12 @@ class App(Tk):
       self.visibility = True
   
   def get_random_password(self, nb_character: int = 8) -> str:
-    return "".join(random.sampl
+    return "".join(random.sampl    # if self.is_pw_auto_generate:
+    #   self.save_user(self.data, login, password)
+    # elif len(password) >= 8 and bool(re.search(r"[a-zA-Z0-9]", password)):
+    #   self.save_user(self.data, login, password)
+    # else:
+    #   pass
     str : The hashed password in hexadecimal format.
     """
     # Convert the password string to bytes using UTF-8 encoding,
@@ -155,9 +169,30 @@ class App(Tk):
         return True
     
     return False
-  
+
+  def on_register_btn_clicked(self, login: str, password: str) -> None:
+    password_can_pass = len(password) >= 8 and any(c in string.ascii_lowercase for c in password) and any(c in string.ascii_uppercase for c in password) and any(c in string.punctuation for c in password)
+
+    if self.is_pw_auto_generate == True or password_can_pass:
+      self.save_user(self.data, login, password)
+    else:
+      self.lbl_error_message.configure(text="\n".join([
+        "Le mot de passe doit correspondre aux critères si dessous:",
+        " - Il doit contenir au moins 8 caractères.",
+        " - Il doit contenir au moins une lettre majuscule.",
+        " - Il doit contenir au moins une lettre minuscule.",
+        " - Il doit contenir au moins un chiffre.",
+        " - Il doit contenir au moins un caractère spéciaux."
+      ]))
+      self.self_paned.add(self.lbl_error_message)
+
+  def on_entry_pw_changed(self, var, index, mode):
+    if self.is_pw_auto_generate:
+      self.is_pw_auto_generate = False
+
   def on_generate_rand_pw_btn_clicked(self, nb_character: str, entry_password_value: StringVar) -> None:
     entry_password_value.set(self.get_random_password(int(nb_character)))
+    self.is_pw_auto_generate = True
   
   def on_visibility_btn_click(self, btn_visibility: Button, entry_password: Entry) -> None:
     if self.visibility:
