@@ -17,7 +17,7 @@ class App(Tk):
     self.resizable(False, False)
 
     self.self_paned = PanedWindow(self, orient="vertical")
-    self.self_paned.pack(side="top", pady=75, padx=75, fill="both")
+    self.self_paned.pack(side="top", pady=75, padx=75)
 
     # Login section
     lbl_login = Label(master=self, text="Nom d'utilisateur")
@@ -28,9 +28,8 @@ class App(Tk):
 
     # Password section
     password_section = Frame(self)
-    password_section.pack(fill='both', expand=True)
-    password_section.columnconfigure(2, weight=1)
-    password_section.rowconfigure(0, weight=1)
+    password_section.pack(fill="both", expand=True)
+    password_section.columnconfigure(0, weight=1)
 
     lbl_password = Label(master=self, text="Mot de passe")
     self.self_paned.add(lbl_password)
@@ -38,13 +37,13 @@ class App(Tk):
     entry_password_value = StringVar()
     entry_password_value.trace_add("write", callback=self.on_entry_pw_changed)
     entry_password = Entry(master=password_section, textvariable=entry_password_value, show="*")
-    entry_password.grid(row=0, column=0, sticky="WE", padx=(0, 5))
+    entry_password.grid(row=0, column=0, padx=(0, 5), sticky="WE")
 
     btn_show_password = Button(master=password_section, image=self.pi_visibility_on, command=lambda: self.on_visibility_btn_click(btn_show_password, entry_password))
-    btn_show_password.grid(row=0, column=1, sticky="WE", padx=(0, 5))
+    btn_show_password.grid(row=0, column=1, padx=(0, 5))
     
     btn_clear_password = Button(master=password_section, text="X", command=lambda: entry_password_value.set(""))
-    btn_clear_password.grid(row=0, column=2, sticky="WE")
+    btn_clear_password.grid(row=0, column=2)
 
     self.self_paned.add(password_section)
 
@@ -88,12 +87,7 @@ class App(Tk):
 
   def show_app_reset_password(self) -> None:
     sub_window = Toplevel()
-    sub_window.title("Réinitialisé le mot de passe")    # if self.is_pw_auto_generate:
-    #   self.save_user(self.data, login, password)
-    # elif len(password) >= 8 and bool(re.search(r"[a-zA-Z0-9]", password)):
-    #   self.save_user(self.data, login, password)
-    # else:
-    #   pass
+    sub_window.title("Réinitialisé le mot de passe")
     sub_window.resizable(False, False)
 
     sub_paned_window = PanedWindow(master=sub_window, orient="vertical")
@@ -101,12 +95,7 @@ class App(Tk):
 
     # Login section
     lbl_login = Label(master=sub_paned_window, text="Nom d'utilisateur")
-    sub_paned_window.add(lbl_login)    # if self.is_pw_auto_generate:
-    #   self.save_user(self.data, login, password)
-    # elif len(password) >= 8 and bool(re.search(r"[a-zA-Z0-9]", password)):
-    #   self.save_user(self.data, login, password)
-    # else:
-    #   pass
+    sub_paned_window.add(lbl_login)
     entry_login = Entry(master=sub_paned_window)
     sub_paned_window.add(entry_login)
 
@@ -177,7 +166,7 @@ class App(Tk):
       self.save_user(self.data, login, password)
     else:
       self.lbl_error_message.configure(text="\n".join([
-        "Le mot de passe doit correspondre aux critères si dessous:",
+        "Le nom d'utilisateur doit être indiquer et le mot de passe doit correspondre aux critères si dessous:",
         " - Il doit contenir au moins 8 caractères.",
         " - Il doit contenir au moins une lettre majuscule.",
         " - Il doit contenir au moins une lettre minuscule.",
